@@ -58,6 +58,7 @@ public class ImageViewerAdapter extends RecyclerView.Adapter<ImageViewerAdapter.
             holder.select.setImageResource(R.drawable.imageviewer_un_select);
         }
         holder.select.setOnClickListener(new onChildViewClickListener(onItemChildViewClickListener,holder.itemView,position,0));
+        holder.imageView.setOnClickListener(new onChildViewClickListener(onItemChildViewClickListener,holder.itemView,position,1));
     }
 
     @Override

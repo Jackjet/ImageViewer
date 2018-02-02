@@ -7,11 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +67,10 @@ public class ImageShowActivity extends AppCompatActivity implements ImageViewerA
         while (cursor.moveToNext()) {
             //获取图片的路径
             String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-            list.add(new ImageViewerModel(path,false));
+            if ((new File(path)).exists()) {
+                //根据路径得到File，然后判断该文件是否存在，避免检索图片时得到错误的路径（有时会得到裁剪图片后的文件，猜测是内存缓存中的图片）
+                list.add(new ImageViewerModel(path, false));
+            }
         }
         adapter.notifyDataSetChanged();
     }
@@ -73,6 +78,22 @@ public class ImageShowActivity extends AppCompatActivity implements ImageViewerA
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode){
+            case 101:
+                if (resultCode == RESULT_OK){
+                    int position = data.getIntExtra("position", 0);
+                    boolean isSelect = data.getBooleanExtra("isSelect", false);
+                    Log.e("===",list.get(position).isSelect() +"---"+isSelect);
+                    if (list.get(position).isSelect() && !isSelect) {
+                        list.get(position).setSelect(isSelect);
+                        adapter.notifyItemChanged(position);
+                    }else if (!list.get(position).isSelect() && isSelect){
+                        list.get(position).setSelect(isSelect);
+                        adapter.notifyItemChanged(position);
+                    }
+                }
+                break;
+        }
     }
 
 
@@ -100,6 +121,13 @@ public class ImageShowActivity extends AppCompatActivity implements ImageViewerA
                 }
                 break;
             case 1:
+                Intent intent = new Intent(ImageShowActivity.this, SingleImageShowActivity.class);
+                intent.putExtra("url",list.get(position).getPath());
+                intent.putExtra("position",position);
+                intent.putExtra("titleBgColorId",titleBgColorId);
+                intent.putExtra("backImgId",backImgId);
+                intent.putExtra("isSelect",list.get(position).isSelect());
+                startActivityForResult(intent,101);
                 break;
         }
     }
